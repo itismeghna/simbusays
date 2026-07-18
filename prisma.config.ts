@@ -8,7 +8,9 @@ export default defineConfig({
   migrations: {
     path: "prisma/migrations",
   },
+  // CLI commands (migrate, studio) need a direct, non-pooled connection.
+  // The app itself connects via the pooled DATABASE_URL (see src/lib/prisma.ts).
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: process.env["DIRECT_URL"],
   },
 });
