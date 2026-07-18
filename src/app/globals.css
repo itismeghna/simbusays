@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  /* Palette lifted from Simbu the lion: cream muzzle, honey coat,
+     caramel mane, gold glitter eyes, and that little pink nose. */
+  --color-cream: #fff8ec;
+  --color-cream-deep: #fbecd2;
+  --color-honey: #eec488;
+  --color-honey-deep: #e0a85c;
+  --color-caramel: #c9873f;
+  --color-caramel-deep: #8f5a2a;
+  --color-ink: #4a2f18;
+  --color-gold: #eeb63e;
+  --color-blush: #f3aebb;
+  --color-blush-deep: #e88a9c;
+}
+
+@theme inline {
+  --color-cream: var(--color-cream);
+  --color-cream-deep: var(--color-cream-deep);
+  --color-honey: var(--color-honey);
+  --color-honey-deep: var(--color-honey-deep);
+  --color-caramel: var(--color-caramel);
+  --color-caramel-deep: var(--color-caramel-deep);
+  --color-ink: var(--color-ink);
+  --color-gold: var(--color-gold);
+  --color-blush: var(--color-blush);
+  --color-blush-deep: var(--color-blush-deep);
+  --font-heading: var(--font-fredoka);
+  --font-body: var(--font-nunito);
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: var(--font-heading), system-ui, sans-serif;
+}
+
+/* Whisker motif: three curved lines, used as a decorative flourish */
+.whiskers {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 46px;
+}
+.whiskers span {
+  height: 2.5px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.55;
+}
+.whiskers span:nth-child(1) { width: 100%; }
+.whiskers span:nth-child(2) { width: 78%; }
+.whiskers span:nth-child(3) { width: 55%; }
+.whiskers.whiskers-right {
+  transform: scaleX(-1);
+}
+
+/* Paw print, used as a bullet / decorative dingbat */
+.paw {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='42' rx='15' ry='13' fill='%23c9873f'/%3E%3Cellipse cx='14' cy='24' rx='7' ry='9' fill='%23c9873f'/%3E%3Cellipse cx='30' cy='14' rx='7.5' ry='9.5' fill='%23c9873f'/%3E%3Cellipse cx='47' cy='16' rx='7' ry='9' fill='%23c9873f'/%3E%3Cellipse cx='58' cy='32' rx='6' ry='8' fill='%23c9873f'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Scalloped / mane edge divider */
+.mane-edge {
+  height: 18px;
+  background-repeat: repeat-x;
+  background-size: 34px 18px;
+  background-image: radial-gradient(circle at 50% 0%, var(--color-caramel) 0 48%, transparent 49%);
+}
