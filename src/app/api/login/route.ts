@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkPassword, COOKIE_NAME, expectedToken } from "@/lib/auth";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { clearSessionCookie, setSessionCookie } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
-  const { password } = await request.json();
+  const { email, password } = await request.json();
+  const cleanEmail = String(email ?? "").trim().toLowerCase();
+  const cleanPassword = String(password ?? "");
 
-  if (!checkPassword(String(password ?? ""))) {
-    return NextResponse.json({ error: "That's not the password." }, { status: 401 });
+  const user = cleanEmail
+    ? await prisma.user.findUnique({ where: { email: cleanEmail } })
+    : null;
+
+  const valid = user && (await bcrypt.compare(cleanPassword, user.passwordHash));
+  if (!user || !valid) {
+    return NextResponse.json({ error: "Wrong email or password." }, { status: 401 });
   }
 
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(COOKIE_NAME, expectedToken(), {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
+  await setSessionCookie(user.id);
+
+  return NextResponse.json({
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
   });
-  return res;
 }
 
 export async function DELETE() {
-  const res = NextResponse.json({ ok: true });
-  res.cookies.delete(COOKIE_NAME);
-  return res;
+  await clearSessionCookie();
+  return NextResponse.json({ ok: true });
 }

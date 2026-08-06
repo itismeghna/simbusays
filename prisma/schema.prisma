@@ -12,13 +12,38 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum PostStatus {
+  PUBLISHED
+  PENDING
+  REJECTED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(MEMBER)
+  createdAt    DateTime  @default(now())
+  posts        Post[]
+  comments     Comment[]
+}
+
 model Post {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   title     String
-  slug      String    @unique
+  slug      String     @unique
   excerpt   String
   body      String
-  createdAt DateTime  @default(now())
+  status    PostStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+  authorId  String
+  author    User       @relation(fields: [authorId], references: [id])
   media     Media[]
   comments  Comment[]
 }
@@ -36,7 +61,8 @@ model Comment {
   id        String   @id @default(cuid())
   postId    String
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
   body      String
   createdAt DateTime @default(now())
 }

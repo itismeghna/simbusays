@@ -3,11 +3,12 @@ import path from "path";
 import crypto from "crypto";
 import slugify from "slugify";
 import { prisma } from "@/lib/prisma";
-import { isAuthed } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { supabaseAdmin, MEDIA_BUCKET } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
-  if (!(await isAuthed())) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Not authorized." }, { status: 401 });
   }
 
@@ -76,6 +77,8 @@ export async function POST(request: NextRequest) {
       slug,
       body,
       excerpt,
+      authorId: user.id,
+      status: user.role === "ADMIN" ? "PUBLISHED" : "PENDING",
       media: { create: mediaData },
     },
   });

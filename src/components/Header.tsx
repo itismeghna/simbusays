@@ -1,8 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import Whiskers from "./Whiskers";
+import HeaderAuthMenu from "./HeaderAuthMenu";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function Header() {
+export default async function Header() {
+  const user = await getCurrentUser();
+
   return (
     <header className="sticky top-0 z-30 bg-cream-deep">
       <div className="mx-auto max-w-5xl px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2">
@@ -38,12 +42,21 @@ export default function Header() {
           >
             About
           </Link>
+          {user?.role === "ADMIN" && (
+            <Link
+              href="/moderation"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold text-caramel-deep hover:bg-cream transition-colors whitespace-nowrap"
+            >
+              Moderation
+            </Link>
+          )}
           <Link
             href="/new-post"
             className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-caramel text-cream hover:bg-caramel-deep transition-colors shadow-sm whitespace-nowrap"
           >
             New post
           </Link>
+          <HeaderAuthMenu user={user} />
         </nav>
       </div>
       <div className="mane-edge text-caramel" />
