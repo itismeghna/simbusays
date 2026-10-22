@@ -5,6 +5,7 @@ import { readingTime } from "@/lib/format";
 import { categoryLabel, isCategory } from "@/lib/categories";
 import PostCard, { FeaturedPostCard } from "@/components/PostCard";
 import CategoryCloud from "@/components/CategoryCloud";
+import { getLogoUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function HomePage({
   const requested = (await searchParams).category;
   const active = isCategory(requested) ? requested : null;
 
-  const [rows, grouped] = await Promise.all([
+  const [rows, grouped, logoUrl] = await Promise.all([
     prisma.post.findMany({
       where: { status: "PUBLISHED", ...(active && { category: active }) },
       orderBy: { createdAt: "desc" },
@@ -31,6 +32,7 @@ export default async function HomePage({
       where: { status: "PUBLISHED" },
       _count: { _all: true },
     }),
+    getLogoUrl(),
   ]);
 
   const counts = Object.fromEntries(grouped.map((g) => [g.category ?? "", g._count._all]));
@@ -42,7 +44,7 @@ export default async function HomePage({
       <section className="pt-14 pb-14 sm:pt-20 sm:pb-16 flex flex-col items-center text-center">
         <span className="relative w-16 h-16 rounded-full overflow-hidden bg-subtle mb-5">
           <Image
-            src="/images/simbu.png"
+            src={logoUrl}
             alt="Simbu the lion"
             fill
             sizes="64px"

@@ -4,9 +4,10 @@ import HeaderAuthMenu from "./HeaderAuthMenu";
 import { PencilIcon } from "./Icons";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getLogoUrl } from "@/lib/site";
 
 export default async function Header() {
-  const user = await getCurrentUser();
+  const [user, logoUrl] = await Promise.all([getCurrentUser(), getLogoUrl()]);
   const pendingCount =
     user?.role === "ADMIN" ? await prisma.post.count({ where: { status: "PENDING" } }) : 0;
 
@@ -16,7 +17,7 @@ export default async function Header() {
         <Link href="/" className="flex items-center gap-2.5 min-w-0">
           <span className="relative w-8 h-8 rounded-full overflow-hidden bg-subtle shrink-0">
             <Image
-              src="/images/simbu.png"
+              src={logoUrl}
               alt=""
               fill
               sizes="32px"

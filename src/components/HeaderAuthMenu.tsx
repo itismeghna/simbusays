@@ -87,6 +87,16 @@ export default function HeaderAuthMenu({
               )}
             </Link>
           )}
+          {user.role === "ADMIN" && (
+            <Link
+              href="/settings/logo"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block rounded-lg px-3 py-2 text-sm hover:bg-subtle"
+            >
+              Change logo
+            </Link>
+          )}
           <Link
             href="/new-post"
             role="menuitem"

@@ -67,3 +67,11 @@ model Comment {
   body      String
   createdAt DateTime @default(now())
 }
+
+// Site logos Meghna has uploaded; at most one is active. None active = built-in default.
+model SiteLogo {
+  id        String   @id @default(cuid())
+  url       String
+  active    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
