@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import PawIcon from "./PawIcon";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -36,42 +35,47 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="max-w-sm mx-auto text-center">
-      <PawIcon className="w-10 h-10 text-caramel mx-auto mb-4" />
-      <h1 className="font-heading text-2xl font-semibold text-caramel-deep mb-2">
-        Welcome back
-      </h1>
-      <p className="text-sm text-ink/60 mb-6">Log in to comment, share, or write a post.</p>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
-          type="email"
-          required
-          autoFocus
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="rounded-xl border border-honey/60 bg-cream px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-honey-deep"
-        />
-        <input
-          type="password"
-          required
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="rounded-xl border border-honey/60 bg-cream px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-honey-deep"
-        />
-        {error && <p className="text-sm text-blush-deep">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-full bg-caramel text-cream text-sm font-semibold py-2 hover:bg-caramel-deep transition-colors disabled:opacity-50"
-        >
-          {loading ? "Checking…" : "Log in"}
+    <div>
+      <h1 className="font-display text-3xl font-medium tracking-tight mb-2">Welcome back</h1>
+      <p className="text-muted mb-8">Log in to comment, share, and write stories.</p>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div>
+          <label htmlFor="email" className="label">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            autoFocus
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input"
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="label">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input"
+          />
+        </div>
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <button type="submit" disabled={loading} className="btn btn-primary h-10 mt-2">
+          {loading ? "Logging in…" : "Log in"}
         </button>
       </form>
-      <p className="text-sm text-ink/60 mt-5">
+      <p className="text-sm text-muted mt-8 text-center">
         New here?{" "}
-        <Link href="/register" className="font-semibold text-caramel-deep hover:underline">
+        <Link href="/register" className="font-medium text-ink underline underline-offset-4">
           Create an account
         </Link>
       </p>

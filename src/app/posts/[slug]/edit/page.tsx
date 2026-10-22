@@ -14,7 +14,10 @@ export default async function EditPostPage({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const post = await prisma.post.findUnique({ where: { slug } });
+  const post = await prisma.post.findUnique({
+    where: { slug },
+    include: { media: { orderBy: { order: "asc" } } },
+  });
   if (!post) notFound();
 
   const isOwner = user.id === post.authorId;
@@ -22,10 +25,16 @@ export default async function EditPostPage({
   if (!isOwner && !isAdmin) redirect("/");
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-12">
+    <div className="mx-auto max-w-[720px] px-4 sm:px-6 py-10">
       <PostEditor
         isAdmin={isAdmin}
-        existingPost={{ slug: post.slug, title: post.title, body: post.body }}
+        existingPost={{
+          slug: post.slug,
+          title: post.title,
+          body: post.body,
+          category: post.category,
+          media: post.media.map((m) => ({ id: m.id, url: m.url, type: m.type })),
+        }}
       />
     </div>
   );

@@ -1,21 +1,18 @@
 import Link from "next/link";
-import PawIcon from "@/components/PawIcon";
+import { CheckIcon } from "@/components/Icons";
 
 export default function SubmittedPage() {
   return (
-    <div className="mx-auto max-w-md px-5 py-16 text-center">
-      <PawIcon className="w-10 h-10 text-caramel mx-auto mb-4" />
-      <h1 className="font-heading text-2xl font-semibold text-caramel-deep mb-2">
-        Sent for review
-      </h1>
-      <p className="text-sm text-ink/60 mb-6">
+    <div className="mx-auto max-w-sm px-4 py-24 text-center">
+      <span className="mx-auto mb-6 flex w-12 h-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+        <CheckIcon className="w-5 h-5" />
+      </span>
+      <h1 className="font-display text-3xl font-medium tracking-tight mb-3">Sent for review</h1>
+      <p className="text-muted mb-8">
         Thanks for sharing! Meghna will take a look and publish it soon.
       </p>
-      <Link
-        href="/"
-        className="inline-block px-5 py-2 rounded-full bg-caramel text-cream text-sm font-semibold hover:bg-caramel-deep transition-colors"
-      >
-        Back home
+      <Link href="/" className="btn btn-secondary">
+        Back to stories
       </Link>
     </div>
   );

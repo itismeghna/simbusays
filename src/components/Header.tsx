@@ -1,65 +1,44 @@
 import Image from "next/image";
 import Link from "next/link";
-import Whiskers from "./Whiskers";
 import HeaderAuthMenu from "./HeaderAuthMenu";
+import { PencilIcon } from "./Icons";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function Header() {
   const user = await getCurrentUser();
+  const pendingCount =
+    user?.role === "ADMIN" ? await prisma.post.count({ where: { status: "PENDING" } }) : 0;
 
   return (
-    <header className="sticky top-0 z-30 bg-cream-deep">
-      <div className="mx-auto max-w-5xl px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2">
-        <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
-          <span className="relative w-9 h-9 sm:w-12 sm:h-12 rounded-full overflow-hidden ring-4 ring-cream shadow-sm shrink-0 bg-honey">
+    <header className="sticky top-0 z-30 border-b border-line bg-paper/85 backdrop-blur">
+      <div className="mx-auto max-w-5xl h-16 px-4 sm:px-6 flex items-center justify-between gap-3">
+        <Link href="/" className="flex items-center gap-2.5 min-w-0">
+          <span className="relative w-8 h-8 rounded-full overflow-hidden bg-subtle shrink-0">
             <Image
               src="/images/simbu.png"
-              alt="Simbu the lion"
+              alt=""
               fill
-              sizes="48px"
-              className="object-cover object-top group-hover:scale-105 transition-transform"
+              sizes="32px"
+              className="object-cover object-top"
             />
           </span>
-          <span className="flex items-center gap-2 text-caramel-deep min-w-0">
-            <Whiskers className="text-caramel-deep hidden sm:inline-flex" />
-            <span className="font-heading text-lg sm:text-2xl font-semibold tracking-tight whitespace-nowrap">
-              Simbu Says
-            </span>
-            <Whiskers side="right" className="text-caramel-deep hidden sm:inline-flex" />
+          <span className="font-display text-xl font-semibold tracking-tight whitespace-nowrap">
+            Simbu Says
           </span>
         </Link>
 
-        <nav className="flex items-center gap-0.5 sm:gap-2 shrink-0">
-          <Link
-            href="/"
-            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold text-caramel-deep hover:bg-cream transition-colors whitespace-nowrap"
-          >
-            Home
-          </Link>
-          <Link
-            href="/about"
-            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold text-caramel-deep hover:bg-cream transition-colors whitespace-nowrap"
-          >
+        <nav className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <Link href="/about" className="btn btn-ghost px-3">
             About
           </Link>
-          {user?.role === "ADMIN" && (
-            <Link
-              href="/moderation"
-              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold text-caramel-deep hover:bg-cream transition-colors whitespace-nowrap"
-            >
-              Moderation
-            </Link>
-          )}
-          <Link
-            href="/new-post"
-            className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-caramel text-cream hover:bg-caramel-deep transition-colors shadow-sm whitespace-nowrap"
-          >
-            New post
+          <Link href="/new-post" className="btn btn-primary px-3 sm:px-4">
+            <PencilIcon className="w-3.5 h-3.5" />
+            Write
           </Link>
-          <HeaderAuthMenu user={user} />
+          <HeaderAuthMenu user={user} pendingCount={pendingCount} />
         </nav>
       </div>
-      <div className="mane-edge text-caramel" />
     </header>
   );
 }

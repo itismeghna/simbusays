@@ -9,7 +9,7 @@ export default async function RegisterPage() {
   if (user) redirect("/");
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-12">
+    <div className="mx-auto max-w-sm px-4 py-16 sm:py-24">
       <RegisterForm />
     </div>
   );

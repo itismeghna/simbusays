@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
-import crypto from "crypto";
 import slugify from "slugify";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { supabaseAdmin, MEDIA_BUCKET } from "@/lib/supabase";
+import { parseMediaInput } from "@/lib/media";
+import { makeExcerpt } from "@/lib/format";
+import { isCategory } from "@/lib/categories";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -12,18 +12,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authorized." }, { status: 401 });
   }
 
-  const form = await request.formData();
-  const title = String(form.get("title") ?? "").trim();
-  const body = String(form.get("body") ?? "").trim();
-  const files = form
-    .getAll("media")
-    .filter((f): f is File => f instanceof File && f.size > 0);
+  const payload = await request.json();
+  const title = String(payload.title ?? "").trim();
+  const body = String(payload.body ?? "").trim();
+  const media = parseMediaInput(payload.media ?? []);
+  const category = payload.category ?? null;
+  if (category !== null && !isCategory(category)) {
+    return NextResponse.json({ error: "Unknown category." }, { status: 400 });
+  }
 
   if (!title || !body) {
     return NextResponse.json(
       { error: "Title and write-up are both required." },
       { status: 400 }
     );
+  }
+  if (!media) {
+    return NextResponse.json({ error: "Invalid media." }, { status: 400 });
   }
 
   const baseSlug = slugify(title, { lower: true, strict: true }) || "post";
@@ -34,52 +39,18 @@ export async function POST(request: NextRequest) {
     slug = `${baseSlug}-${suffix}`;
   }
 
-  const mediaData: { url: string; type: string; order: number }[] = [];
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const ext = path.extname(file.name) || "";
-    const filename = `${crypto.randomUUID()}${ext}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    const { error } = await supabaseAdmin.storage
-      .from(MEDIA_BUCKET)
-      .upload(filename, buffer, {
-        contentType: file.type || "application/octet-stream",
-      });
-
-    if (error) {
-      return NextResponse.json(
-        { error: `Upload failed: ${error.message}` },
-        { status: 500 }
-      );
-    }
-
-    const { data: publicUrlData } = supabaseAdmin.storage
-      .from(MEDIA_BUCKET)
-      .getPublicUrl(filename);
-
-    mediaData.push({
-      url: publicUrlData.publicUrl,
-      type: file.type.startsWith("video") ? "video" : "image",
-      order: i,
-    });
-  }
-
-  const trimmedBody = body.replace(/\s+/g, " ");
-  const excerpt =
-    trimmedBody.length > 160
-      ? `${trimmedBody.slice(0, 160).replace(/\s+\S*$/, "")}…`
-      : trimmedBody;
-
   const post = await prisma.post.create({
     data: {
       title,
       slug,
       body,
-      excerpt,
+      excerpt: makeExcerpt(body),
+      category,
       authorId: user.id,
       status: user.role === "ADMIN" ? "PUBLISHED" : "PENDING",
-      media: { create: mediaData },
+      media: {
+        create: media.map((m, order) => ({ url: m.url, type: m.type, order })),
+      },
     },
   });
 

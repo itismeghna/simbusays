@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import PawIcon from "./PawIcon";
+import MediaManager, { existingMedia, type EditorMedia } from "./MediaManager";
+import { uploadFiles } from "@/lib/upload-client";
+import { CATEGORIES } from "@/lib/categories";
 
 type ExistingPost = {
   slug: string;
   title: string;
   body: string;
+  category: string | null;
+  media: { id: string; url: string; type: string }[];
 };
 
 export default function PostEditor({
@@ -21,152 +26,129 @@ export default function PostEditor({
   const isEdit = Boolean(existingPost);
   const [title, setTitle] = useState(existingPost?.title ?? "");
   const [body, setBody] = useState(existingPost?.body ?? "");
-  const [files, setFiles] = useState<File[]>([]);
+  const [category, setCategory] = useState<string | null>(existingPost?.category ?? null);
+  const [media, setMedia] = useState<EditorMedia[]>(() => existingMedia(existingPost?.media ?? []));
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    setFiles(Array.from(e.target.files ?? []));
-  }
-
-  function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  }
+  const [status, setStatus] = useState<"idle" | "uploading" | "saving">("idle");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
-    if (isEdit && existingPost) {
-      const res = await fetch(`/api/posts/${existingPost.slug}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body }),
-      });
-      setLoading(false);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "Something went wrong. Try again?");
-        return;
-      }
-      const data = await res.json();
-      router.push(`/posts/${data.post.slug}`);
-      router.refresh();
+    let mediaPayload;
+    try {
+      const pending = media.filter((m) => m.file);
+      if (pending.length > 0) setStatus("uploading");
+      const uploaded = await uploadFiles(pending.map((m) => m.file!));
+      const uploadedByKey = new Map(pending.map((m, i) => [m.key, uploaded[i]]));
+      mediaPayload = media.map((m) =>
+        m.file ? uploadedByKey.get(m.key)! : { id: m.id, url: m.url!, type: m.type }
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed. Try again?");
+      setStatus("idle");
       return;
     }
 
-    const formData = new FormData();
-    formData.set("title", title);
-    formData.set("body", body);
-    files.forEach((f) => formData.append("media", f));
-
-    const res = await fetch("/api/posts", { method: "POST", body: formData });
-    setLoading(false);
+    setStatus("saving");
+    const res = await fetch(isEdit ? `/api/posts/${existingPost!.slug}` : "/api/posts", {
+      method: isEdit ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, body, category, media: mediaPayload }),
+    });
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Something went wrong. Try again?");
+      setStatus("idle");
       return;
     }
 
     const data = await res.json();
-    if (isAdmin) {
-      router.push(`/posts/${data.post.slug}`);
-    } else {
-      router.push("/new-post/submitted");
-    }
+    router.push(isEdit || isAdmin ? `/posts/${data.post.slug}` : "/new-post/submitted");
     router.refresh();
   }
 
+  const busy = status !== "idle";
+  const submitLabel =
+    status === "uploading"
+      ? "Uploading…"
+      : status === "saving"
+        ? "Saving…"
+        : isEdit
+          ? "Save changes"
+          : isAdmin
+            ? "Publish"
+            : "Submit for review";
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading text-2xl font-semibold text-caramel-deep flex items-center gap-2">
-          <PawIcon className="w-5 h-5 text-caramel" />
-          {isEdit ? "Edit adventure" : "New adventure"}
-        </h1>
+    <form onSubmit={handleSubmit}>
+      <div className="flex items-center justify-between gap-4 mb-10">
+        <p className="text-sm text-muted">{isEdit ? "Editing story" : "New story"}</p>
+        <div className="flex items-center gap-2">
+          <Link
+            href={isEdit ? `/posts/${existingPost!.slug}` : "/"}
+            className="btn btn-ghost"
+          >
+            Cancel
+          </Link>
+          <button type="submit" disabled={busy} className="btn btn-primary">
+            {submitLabel}
+          </button>
+        </div>
       </div>
 
       {!isEdit && !isAdmin && (
-        <p className="mb-5 text-sm text-caramel-deep bg-cream-deep/60 rounded-xl px-4 py-3">
-          Your post will be sent to Meghna for a quick review before it goes live.
+        <p className="mb-8 rounded-lg bg-accent-soft px-4 py-3 text-sm text-accent">
+          Meghna will give your story a quick read before it goes live.
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          type="text"
-          required
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="rounded-xl border border-honey/60 bg-cream px-4 py-3 font-heading text-lg focus:outline-none focus:ring-2 focus:ring-honey-deep"
-        />
-        <textarea
-          required
-          placeholder="Tell the story… (leave a blank line between paragraphs)"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          rows={10}
-          className="rounded-xl border border-honey/60 bg-cream px-4 py-3 text-sm leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-honey-deep"
-        />
+      <input
+        type="text"
+        required
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full bg-transparent font-display text-4xl sm:text-5xl font-medium tracking-tight placeholder:text-faint focus:outline-none mb-5"
+      />
 
-        {!isEdit && (
-          <div>
-            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cream-deep text-caramel-deep text-sm font-semibold cursor-pointer hover:bg-honey/40 transition-colors">
-              <PawIcon className="w-4 h-4" />
-              Add photos or videos
-              <input
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                onChange={handleFiles}
-                className="hidden"
-              />
-            </label>
+      <div className="flex flex-wrap items-center gap-1.5 mb-8" role="radiogroup" aria-label="Theme">
+        <span className="text-sm text-muted mr-1.5">Theme</span>
+        {CATEGORIES.map((c) => {
+          const selected = category === c.slug;
+          return (
+            <button
+              key={c.slug}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => setCategory(selected ? null : c.slug)}
+              className={`h-7 px-3 rounded-full text-xs font-medium border transition-colors ${
+                selected
+                  ? "border-accent bg-accent-soft text-accent"
+                  : "border-line text-muted hover:text-ink hover:border-ink/20"
+              }`}
+            >
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
 
-            {files.length > 0 && (
-              <ul className="mt-3 flex flex-wrap gap-2">
-                {files.map((f, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-2 rounded-full bg-cream-deep/70 pl-3 pr-1 py-1 text-xs text-caramel-deep"
-                  >
-                    {f.name}
-                    <button
-                      type="button"
-                      onClick={() => removeFile(i)}
-                      className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-honey/50"
-                      aria-label={`Remove ${f.name}`}
-                    >
-                      &times;
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
+      <textarea
+        required
+        placeholder="Tell your story… Leave a blank line between paragraphs."
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        className="w-full min-h-64 bg-transparent text-lg leading-[1.75] placeholder:text-faint resize-none field-sizing-content focus:outline-none"
+      />
 
-        {error && <p className="text-sm text-blush-deep">{error}</p>}
+      <div className="mt-10 pt-8 border-t border-line">
+        <MediaManager items={media} onChange={setMedia} />
+      </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="self-start px-6 py-2.5 rounded-full bg-caramel text-cream font-semibold hover:bg-caramel-deep transition-colors disabled:opacity-50"
-        >
-          {loading
-            ? isEdit
-              ? "Saving…"
-              : "Submitting…"
-            : isEdit
-              ? "Save changes"
-              : isAdmin
-                ? "Publish adventure"
-                : "Submit for review"}
-        </button>
-      </form>
-    </div>
+      {error && <p className="text-sm text-danger mt-6">{error}</p>}
+    </form>
   );
 }

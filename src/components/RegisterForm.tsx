@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import PawIcon from "./PawIcon";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -37,53 +36,65 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="max-w-sm mx-auto text-center">
-      <PawIcon className="w-10 h-10 text-caramel mx-auto mb-4" />
-      <h1 className="font-heading text-2xl font-semibold text-caramel-deep mb-2">
-        Join the pride
-      </h1>
-      <p className="text-sm text-ink/60 mb-6">
-        Register to comment, share adventures, and submit your own posts.
+    <div>
+      <h1 className="font-display text-3xl font-medium tracking-tight mb-2">Create an account</h1>
+      <p className="text-muted mb-8">
+        Join in to comment on stories and share adventures of your own.
       </p>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
-          type="text"
-          required
-          autoFocus
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="rounded-xl border border-honey/60 bg-cream px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-honey-deep"
-        />
-        <input
-          type="email"
-          required
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="rounded-xl border border-honey/60 bg-cream px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-honey-deep"
-        />
-        <input
-          type="password"
-          required
-          minLength={8}
-          placeholder="Password (min. 8 characters)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="rounded-xl border border-honey/60 bg-cream px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-honey-deep"
-        />
-        {error && <p className="text-sm text-blush-deep">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-full bg-caramel text-cream text-sm font-semibold py-2 hover:bg-caramel-deep transition-colors disabled:opacity-50"
-        >
-          {loading ? "Creating account…" : "Register"}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div>
+          <label htmlFor="name" className="label">
+            Name
+          </label>
+          <input
+            id="name"
+            type="text"
+            required
+            autoFocus
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input"
+          />
+        </div>
+        <div>
+          <label htmlFor="email" className="label">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input"
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="label">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input"
+          />
+          <p className="text-xs text-muted mt-1.5">At least 8 characters.</p>
+        </div>
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <button type="submit" disabled={loading} className="btn btn-primary h-10 mt-2">
+          {loading ? "Creating account…" : "Create account"}
         </button>
       </form>
-      <p className="text-sm text-ink/60 mt-5">
+      <p className="text-sm text-muted mt-8 text-center">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-caramel-deep hover:underline">
+        <Link href="/login" className="font-medium text-ink underline underline-offset-4">
           Log in
         </Link>
       </p>

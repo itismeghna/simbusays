@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { parseMediaInput, removeStorageObjects, syncPostMedia } from "@/lib/media";
+import { makeExcerpt } from "@/lib/format";
+import { isCategory } from "@/lib/categories";
 
 export async function PATCH(
   request: NextRequest,
@@ -28,6 +31,7 @@ export async function PATCH(
     title?: string;
     body?: string;
     excerpt?: string;
+    category?: string | null;
     status?: "PUBLISHED" | "PENDING" | "REJECTED";
   } = {};
 
@@ -45,8 +49,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Write-up can't be empty." }, { status: 400 });
     }
     data.body = body;
-    const trimmed = body.replace(/\s+/g, " ");
-    data.excerpt = trimmed.length > 160 ? `${trimmed.slice(0, 160).replace(/\s+\S*$/, "")}…` : trimmed;
+    data.excerpt = makeExcerpt(body);
+  }
+
+  if (payload.category !== undefined) {
+    if (payload.category !== null && !isCategory(payload.category)) {
+      return NextResponse.json({ error: "Unknown category." }, { status: 400 });
+    }
+    data.category = payload.category;
   }
 
   if (typeof payload.status === "string") {
@@ -62,7 +72,17 @@ export async function PATCH(
     data.status = payload.status;
   }
 
+  let media = null;
+  if (payload.media !== undefined) {
+    media = parseMediaInput(payload.media);
+    if (!media) {
+      return NextResponse.json({ error: "Invalid media." }, { status: 400 });
+    }
+  }
+
   const updated = await prisma.post.update({ where: { slug }, data });
+  if (media) await syncPostMedia(post.id, media);
+
   return NextResponse.json({ post: updated });
 }
 
@@ -76,7 +96,7 @@ export async function DELETE(
   }
 
   const { slug } = await params;
-  const post = await prisma.post.findUnique({ where: { slug } });
+  const post = await prisma.post.findUnique({ where: { slug }, include: { media: true } });
   if (!post) {
     return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
@@ -88,5 +108,6 @@ export async function DELETE(
   }
 
   await prisma.post.delete({ where: { slug } });
+  await removeStorageObjects(post.media.map((m) => m.url));
   return NextResponse.json({ ok: true });
 }

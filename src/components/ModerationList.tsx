@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Link from "next/link";
-import { formatDate } from "@/lib/format";
+import { ImageIcon } from "./Icons";
+import { formatShortDate } from "@/lib/format";
 
 type PendingPost = {
   slug: string;
@@ -11,6 +13,7 @@ type PendingPost = {
   excerpt: string;
   createdAt: Date;
   author: { name: string; email: string };
+  media: { url: string; type: string }[];
 };
 
 export default function ModerationList({ posts }: { posts: PendingPost[] }) {
@@ -30,48 +33,63 @@ export default function ModerationList({ posts }: { posts: PendingPost[] }) {
 
   if (posts.length === 0) {
     return (
-      <div className="rounded-3xl bg-cream-deep/60 py-16 text-center text-caramel-deep/70">
-        <p className="font-heading text-xl mb-2">All caught up</p>
-        <p className="text-sm">No posts waiting for review.</p>
+      <div className="rounded-2xl border border-dashed border-line py-16 text-center">
+        <p className="font-display text-xl mb-1">All caught up</p>
+        <p className="text-sm text-muted">No stories waiting for review.</p>
       </div>
     );
   }
 
   return (
-    <ul className="flex flex-col gap-4">
-      {posts.map((post) => (
-        <li key={post.slug} className="rounded-2xl bg-cream-deep/60 p-5">
-          <div className="flex items-baseline justify-between gap-2 mb-1">
-            <Link
-              href={`/posts/${post.slug}`}
-              className="font-heading text-lg font-semibold text-caramel-deep hover:underline"
-            >
-              {post.title}
-            </Link>
-            <span className="text-xs text-caramel-deep/50">{formatDate(post.createdAt)}</span>
-          </div>
-          <p className="text-xs text-caramel-deep/60 mb-2">
-            by {post.author.name} &middot; {post.author.email}
-          </p>
-          <p className="text-sm text-ink/80 mb-4">{post.excerpt}</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setStatus(post.slug, "PUBLISHED")}
-              disabled={busySlug === post.slug}
-              className="px-4 py-1.5 rounded-full bg-caramel text-cream text-sm font-semibold hover:bg-caramel-deep transition-colors disabled:opacity-50"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => setStatus(post.slug, "REJECTED")}
-              disabled={busySlug === post.slug}
-              className="px-4 py-1.5 rounded-full bg-cream text-blush-deep text-sm font-semibold hover:bg-blush/30 transition-colors disabled:opacity-50"
-            >
-              Reject
-            </button>
-          </div>
-        </li>
-      ))}
+    <ul className="divide-y divide-line border-y border-line">
+      {posts.map((post) => {
+        const cover = post.media[0];
+        return (
+          <li key={post.slug} className="flex flex-col sm:flex-row gap-4 sm:gap-5 py-6">
+            <div className="relative w-full sm:w-36 aspect-[4/3] shrink-0 rounded-lg overflow-hidden bg-subtle">
+              {cover && cover.type === "image" ? (
+                <Image src={cover.url} alt="" fill sizes="144px" className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-faint">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <Link
+                href={`/posts/${post.slug}`}
+                className="font-display text-xl font-medium tracking-tight hover:text-accent"
+              >
+                {post.title}
+              </Link>
+              <p className="text-xs text-muted mt-1 mb-2">
+                {post.author.name} &middot; {post.author.email} &middot;{" "}
+                {formatShortDate(post.createdAt)}
+              </p>
+              <p className="text-sm text-muted line-clamp-2 mb-4">{post.excerpt}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setStatus(post.slug, "PUBLISHED")}
+                  disabled={busySlug === post.slug}
+                  className="btn btn-primary h-8 px-3"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => setStatus(post.slug, "REJECTED")}
+                  disabled={busySlug === post.slug}
+                  className="btn btn-secondary h-8 px-3"
+                >
+                  Reject
+                </button>
+                <Link href={`/posts/${post.slug}`} className="btn btn-ghost h-8 px-3">
+                  Preview
+                </Link>
+              </div>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

@@ -1,62 +1,111 @@
 import Image from "next/image";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import PostCard from "@/components/PostCard";
-import Whiskers from "@/components/Whiskers";
+import { readingTime } from "@/lib/format";
+import { categoryLabel, isCategory } from "@/lib/categories";
+import PostCard, { FeaturedPostCard } from "@/components/PostCard";
+import CategoryCloud from "@/components/CategoryCloud";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
-  const posts = await prisma.post.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: { createdAt: "desc" },
-    include: {
-      media: { orderBy: { order: "asc" }, take: 1 },
-      _count: { select: { comments: true } },
-    },
-  });
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const requested = (await searchParams).category;
+  const active = isCategory(requested) ? requested : null;
+
+  const [rows, grouped] = await Promise.all([
+    prisma.post.findMany({
+      where: { status: "PUBLISHED", ...(active && { category: active }) },
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: { select: { name: true } },
+        media: { orderBy: { order: "asc" }, take: 1 },
+        _count: { select: { comments: true } },
+      },
+    }),
+    prisma.post.groupBy({
+      by: ["category"],
+      where: { status: "PUBLISHED" },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const counts = Object.fromEntries(grouped.map((g) => [g.category ?? "", g._count._all]));
+  const posts = rows.map(({ body, ...post }) => ({ ...post, readingTime: readingTime(body) }));
+  const [featured, ...rest] = posts;
 
   return (
-    <div>
-      <section className="mx-auto max-w-5xl px-5 pt-14 pb-10 flex flex-col items-center text-center">
-        <div className="relative w-28 h-28 rounded-full overflow-hidden ring-8 ring-cream-deep shadow-md mb-5">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      <section className="pt-14 pb-14 sm:pt-20 sm:pb-16 flex flex-col items-center text-center">
+        <span className="relative w-16 h-16 rounded-full overflow-hidden bg-subtle mb-5">
           <Image
             src="/images/simbu.png"
             alt="Simbu the lion"
             fill
-            sizes="112px"
+            sizes="64px"
+            loading="eager"
             className="object-cover object-top"
           />
-        </div>
-        <div className="flex items-center gap-3 text-caramel mb-3">
-          <Whiskers />
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-caramel-deep/70">
-            Roars, rambles &amp; real adventures
-          </span>
-          <Whiskers side="right" />
-        </div>
-        <h1 className="font-heading text-4xl sm:text-5xl font-semibold text-caramel-deep mb-4">
+        </span>
+        <h1 className="font-display text-4xl sm:text-5xl font-medium tracking-tight mb-4">
           Simbu Says
         </h1>
-        <p className="max-w-xl text-ink/70">
-          Curated adventures from Meghna, narrated in spirit by a very opinionated
-          plush lion. Expect day trips, small joys, and the occasional roar.
+        <p className="max-w-md text-muted leading-relaxed">
+          Small adventures and everyday joys, collected by Meghna and narrated in spirit by a
+          rather opinionated plush lion.
         </p>
+        <CategoryCloud counts={counts} active={active} />
       </section>
 
-      <section className="mx-auto max-w-5xl px-5 pb-20">
-        {posts.length === 0 ? (
-          <div className="rounded-3xl bg-cream-deep/60 py-16 text-center text-caramel-deep/70">
-            <p className="font-heading text-xl mb-2">No adventures posted yet</p>
-            <p className="text-sm">Simbu is waiting patiently. Check back soon!</p>
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post) => (
-              <PostCard key={post.slug} post={post} />
-            ))}
-          </div>
-        )}
-      </section>
+      {active ? (
+        <section className="pt-10 border-t border-line">
+          <h2 className="font-display text-3xl font-medium tracking-tight mb-1">
+            {categoryLabel(active)}
+          </h2>
+          <p className="text-sm text-muted mb-10">
+            {posts.length} {posts.length === 1 ? "story" : "stories"}
+          </p>
+          {posts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-line py-16 text-center">
+              <p className="text-muted mb-5">Nothing filed under {categoryLabel(active)} yet.</p>
+              <Link href="/" scroll={false} className="btn btn-secondary">
+                See all stories
+              </Link>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+              {posts.map((post) => (
+                <PostCard key={post.slug} post={post} />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : !featured ? (
+        <div className="rounded-2xl border border-dashed border-line py-20 text-center">
+          <p className="font-display text-xl mb-2">No stories yet</p>
+          <p className="text-sm text-muted mb-6">The first adventure is on its way.</p>
+          <Link href="/new-post" className="btn btn-secondary">
+            Write the first one
+          </Link>
+        </div>
+      ) : (
+        <>
+          <FeaturedPostCard post={featured} />
+          {rest.length > 0 && (
+            <section className="mt-16 sm:mt-20 pt-10 border-t border-line">
+              <h2 className="text-sm font-medium text-muted mb-8">More stories</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+                {rest.map((post) => (
+                  <PostCard key={post.slug} post={post} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }

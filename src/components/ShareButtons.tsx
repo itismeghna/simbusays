@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import PawIcon from "./PawIcon";
+import { CheckIcon, ShareIcon } from "./Icons";
 
 export default function ShareButtons({ title, url }: { title: string; url: string }) {
   const [copied, setCopied] = useState(false);
@@ -21,12 +21,9 @@ export default function ShareButtons({ title, url }: { title: string; url: strin
   }
 
   return (
-    <button
-      onClick={handleShare}
-      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-cream-deep text-caramel-deep text-xs font-semibold hover:bg-honey/40 transition-colors"
-    >
-      <PawIcon className="w-3.5 h-3.5" />
-      {copied ? "Link copied!" : "Share"}
+    <button onClick={handleShare} className="btn btn-secondary h-8 px-3">
+      {copied ? <CheckIcon className="w-3.5 h-3.5" /> : <ShareIcon className="w-3.5 h-3.5" />}
+      {copied ? "Link copied" : "Share"}
     </button>
   );
 }

@@ -6,29 +6,29 @@ export default function MediaGallery({ media }: { media: MediaItem[] }) {
   if (media.length === 0) return null;
 
   return (
-    <div
-      className={`grid gap-3 mb-8 ${
-        media.length === 1 ? "grid-cols-1" : "grid-cols-2"
-      }`}
-    >
-      {media.map((item) => (
-        <div
-          key={item.id}
-          className="relative rounded-2xl overflow-hidden bg-honey/30 aspect-[4/3]"
-        >
-          {item.type === "video" ? (
-            <video src={item.url} className="w-full h-full object-cover" controls />
-          ) : (
-            <Image
-              src={item.url}
-              alt=""
-              fill
-              sizes="(min-width: 768px) 50vw, 100vw"
-              className="object-cover"
-            />
-          )}
-        </div>
-      ))}
+    <div className="flex flex-col gap-4 my-10">
+      {media.map((item, i) =>
+        item.type === "video" ? (
+          <video
+            key={item.id}
+            src={item.url}
+            controls
+            playsInline
+            className="w-full max-h-[80vh] rounded-xl bg-ink"
+          />
+        ) : (
+          <Image
+            key={item.id}
+            src={item.url}
+            alt=""
+            width={0}
+            height={0}
+            sizes="(min-width: 768px) 720px, 100vw"
+            loading={i === 0 ? "eager" : "lazy"}
+            className="w-full h-auto max-h-[85vh] object-contain rounded-xl bg-subtle"
+          />
+        )
+      )}
     </div>
   );
 }

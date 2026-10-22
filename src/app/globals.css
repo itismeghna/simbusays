@@ -1,80 +1,68 @@
 @import "tailwindcss";
 
 :root {
-  /* Palette lifted from Simbu the lion: cream muzzle, honey coat,
-     caramel mane, gold glitter eyes, and that little pink nose. */
-  --color-cream: #fff8ec;
-  --color-cream-deep: #fbecd2;
-  --color-honey: #eec488;
-  --color-honey-deep: #e0a85c;
-  --color-caramel: #c9873f;
-  --color-caramel-deep: #8f5a2a;
-  --color-ink: #4a2f18;
-  --color-gold: #eeb63e;
-  --color-blush: #f3aebb;
-  --color-blush-deep: #e88a9c;
+  /* Calm, warm neutrals with a single clay accent borrowed from Simbu's mane. */
+  --color-paper: #fbfaf8;
+  --color-surface: #ffffff;
+  --color-subtle: #f3f1ed;
+  --color-line: #e7e3dd;
+  --color-ink: #1f1d1a;
+  --color-muted: #6b665f;
+  --color-faint: #9b958d;
+  --color-accent: #a85d32;
+  --color-accent-soft: #f6ebe3;
+  --color-danger: #b42318;
+  --color-success: #2f6b46;
 }
 
 @theme inline {
-  --color-cream: var(--color-cream);
-  --color-cream-deep: var(--color-cream-deep);
-  --color-honey: var(--color-honey);
-  --color-honey-deep: var(--color-honey-deep);
-  --color-caramel: var(--color-caramel);
-  --color-caramel-deep: var(--color-caramel-deep);
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-subtle: var(--color-subtle);
+  --color-line: var(--color-line);
   --color-ink: var(--color-ink);
-  --color-gold: var(--color-gold);
-  --color-blush: var(--color-blush);
-  --color-blush-deep: var(--color-blush-deep);
-  --font-heading: var(--font-fredoka);
-  --font-body: var(--font-nunito);
+  --color-muted: var(--color-muted);
+  --color-faint: var(--color-faint);
+  --color-accent: var(--color-accent);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-danger: var(--color-danger);
+  --color-success: var(--color-success);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
 }
 
 body {
-  background: var(--color-cream);
+  background: var(--color-paper);
   color: var(--color-ink);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, .font-heading {
-  font-family: var(--font-heading), system-ui, sans-serif;
+::selection {
+  background: var(--color-accent-soft);
 }
 
-/* Whisker motif: three curved lines, used as a decorative flourish */
-.whiskers {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 5px;
-  width: 46px;
-}
-.whiskers span {
-  height: 2.5px;
-  border-radius: 999px;
-  background: currentColor;
-  opacity: 0.55;
-}
-.whiskers span:nth-child(1) { width: 100%; }
-.whiskers span:nth-child(2) { width: 78%; }
-.whiskers span:nth-child(3) { width: 55%; }
-.whiskers.whiskers-right {
-  transform: scaleX(-1);
-}
-
-/* Paw print, used as a bullet / decorative dingbat */
-.paw {
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='42' rx='15' ry='13' fill='%23c9873f'/%3E%3Cellipse cx='14' cy='24' rx='7' ry='9' fill='%23c9873f'/%3E%3Cellipse cx='30' cy='14' rx='7.5' ry='9.5' fill='%23c9873f'/%3E%3Cellipse cx='47' cy='16' rx='7' ry='9' fill='%23c9873f'/%3E%3Cellipse cx='58' cy='32' rx='6' ry='8' fill='%23c9873f'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-/* Scalloped / mane edge divider */
-.mane-edge {
-  height: 18px;
-  background-repeat: repeat-x;
-  background-size: 34px 18px;
-  background-image: radial-gradient(circle at 50% 0%, var(--color-caramel) 0 48%, transparent 49%);
+/* Shared control styles, kept here so every form looks the same. */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium whitespace-nowrap transition-colors disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-ink text-white hover:bg-ink/85;
+  }
+  .btn-secondary {
+    @apply border border-line bg-surface text-ink hover:bg-subtle;
+  }
+  .btn-ghost {
+    @apply text-muted hover:text-ink hover:bg-subtle;
+  }
+  .btn-danger {
+    @apply text-danger hover:bg-danger/5;
+  }
+  .input {
+    @apply w-full h-10 rounded-lg border border-line bg-surface px-3 text-sm text-ink placeholder:text-faint transition-shadow focus:outline-none focus:border-ink/30 focus:ring-4 focus:ring-ink/5;
+  }
+  .label {
+    @apply block text-sm font-medium text-ink mb-1.5;
+  }
 }

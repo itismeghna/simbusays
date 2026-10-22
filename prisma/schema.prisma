@@ -40,6 +40,7 @@ model Post {
   slug      String     @unique
   excerpt   String
   body      String
+  category  String?
   status    PostStatus @default(PENDING)
   createdAt DateTime   @default(now())
   authorId  String
