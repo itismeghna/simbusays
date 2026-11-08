@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const FRAME = 240; // on-screen circle, px
-const OUTPUT = 512; // saved logo, px square
+const OUTPUT = 512; // saved image, px square
 
 type Offset = { x: number; y: number };
 
@@ -11,13 +11,17 @@ type Offset = { x: number; y: number };
  * Lets the user pan (drag) and zoom a photo inside a circular frame, then
  * renders exactly what's in the frame to a square PNG (transparency kept).
  */
-export default function LogoCropper({
+export default function CircleCropper({
   file,
+  hint,
+  saveLabel,
   saving,
   onCancel,
   onSave,
 }: {
   file: File;
+  hint: string;
+  saveLabel: string;
   saving: boolean;
   onCancel: () => void;
   onSave: (cropped: File) => void;
@@ -91,7 +95,7 @@ export default function LogoCropper({
     );
     const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
     if (!blob) return setError("Couldn't prepare the image. Try another photo?");
-    onSave(new File([blob], "logo.png", { type: "image/png" }));
+    onSave(new File([blob], "image.png", { type: "image/png" }));
   }
 
   if (error) {
@@ -107,7 +111,7 @@ export default function LogoCropper({
 
   return (
     <div className="rounded-xl border border-line bg-surface p-6 flex flex-col items-center">
-      <p className="text-sm text-muted mb-5">Drag to position Simbu, then zoom to frame him.</p>
+      <p className="text-sm text-muted mb-5">{hint}</p>
 
       <div
         onPointerDown={onPointerDown}
@@ -153,7 +157,7 @@ export default function LogoCropper({
           Cancel
         </button>
         <button onClick={handleSave} disabled={!bitmap || saving} className="btn btn-primary">
-          {saving ? "Saving…" : "Use as logo"}
+          {saving ? "Saving…" : saveLabel}
         </button>
       </div>
     </div>

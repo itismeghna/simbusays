@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { DEFAULT_LOGO } from "@/lib/site";
-import LogoManager from "@/components/LogoManager";
+import CircleImageManager from "@/components/CircleImageManager";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,15 @@ export default async function LogoSettingsPage() {
       <p className="text-muted mb-10">
         Give Simbu a new look whenever you like. Past logos stay here so you can switch back.
       </p>
-      <LogoManager logos={logos} defaultUrl={DEFAULT_LOGO} />
+      <CircleImageManager
+        images={logos}
+        defaultUrl={DEFAULT_LOGO}
+        apiPath="/api/logos"
+        noun="logo"
+        cropHint="Drag to position Simbu, then zoom to frame him."
+        fitClass="object-cover object-top"
+        showHeaderPreview
+      />
     </div>
   );
 }

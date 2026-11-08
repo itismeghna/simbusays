@@ -75,3 +75,11 @@ model SiteLogo {
   active    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+// Photos of Meghna for the About page; at most one is active. None active = built-in default.
+model SitePortrait {
+  id        String   @id @default(cuid())
+  url       String
+  active    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

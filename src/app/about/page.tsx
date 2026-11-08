@@ -1,15 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
+import { getPortraitUrl } from "@/lib/site";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "About — Simbu Says",
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const [portraitUrl, user] = await Promise.all([getPortraitUrl(), getCurrentUser()]);
+
   return (
     <div className="mx-auto max-w-[640px] px-4 sm:px-6 py-14 sm:py-20">
-      <div className="relative w-24 h-24 rounded-full overflow-hidden bg-subtle mb-8">
-        <Image src="/images/meghna.jpg" alt="Meghna Mane" fill sizes="96px" className="object-cover" />
+      <div className="mb-8">
+        <div className="relative w-24 h-24 rounded-full overflow-hidden bg-subtle">
+          <Image src={portraitUrl} alt="Meghna Mane" fill sizes="96px" className="object-cover" />
+        </div>
+        {user?.role === "ADMIN" && (
+          <Link href="/settings/photo" className="inline-block mt-3 text-xs text-muted hover:text-ink">
+            Change photo
+          </Link>
+        )}
       </div>
       <p className="text-xs font-medium uppercase tracking-wider text-accent mb-3">About</p>
       <h1 className="font-display text-4xl sm:text-5xl font-medium tracking-tight mb-8">
